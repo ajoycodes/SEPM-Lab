@@ -3,3 +3,6 @@ target/
 *.iml
 .vscode/
 .DS_Store
+
+# curl cookie files from the README examples
+*.txt
