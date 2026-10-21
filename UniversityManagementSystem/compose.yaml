@@ -1,0 +1,35 @@
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ums
+      POSTGRES_USER: ums
+      POSTGRES_PASSWORD: ums_password
+    ports:
+      - "5432:5432"   # so IntelliJ / ./mvnw spring-boot:run can also use this database
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ums -d ums"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy   # wait until PostgreSQL accepts connections
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/ums   # "db" is the service name above
+      SPRING_DATASOURCE_USERNAME: ums
+      SPRING_DATASOURCE_PASSWORD: ums_password
+      APP_SEED_ADMIN_PASSWORD: admin123
+      APP_SEED_TEACHER_PASSWORD: teacher123
+      APP_SEED_STUDENT_PASSWORD: student123
+    ports:
+      - "8080:8080"
+    restart: on-failure
+
+volumes:
+  pgdata:
