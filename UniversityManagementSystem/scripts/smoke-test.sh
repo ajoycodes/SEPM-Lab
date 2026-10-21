@@ -33,6 +33,11 @@ student_body() { echo "{\"name\":\"Student $1\",\"email\":\"student$1@test.edu\"
 
 echo "Server: $BASE"
 echo
+echo "Swagger UI"
+check "GET / redirects to Swagger UI"         302 "$BASE/"
+check "Swagger UI page, no login needed"      200 "$BASE/swagger-ui/index.html"
+
+echo
 echo "Login and logout"
 check "no session: GET /api/students"           401 "$BASE/api/students"
 check "wrong password"                          401 -X POST "$BASE/api/auth/login" -d username=admin -d password=wrong

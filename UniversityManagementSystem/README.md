@@ -1,8 +1,8 @@
 # University Management System
 
-CSE 3220 (SEPM Lab), home task for lab 4. A Spring Boot REST API with three roles (Admin, Teacher, Student), Spring Security login and logout, BCrypt password hashing, role-based access control, and Docker Compose.
+CSE 3220 (SEPM Lab), home task for lab 4. A Spring Boot REST API with three roles (Admin, Teacher, Student), Spring Security login and logout, BCrypt password hashing, role-based access control, Docker Compose, and a Swagger UI page for trying it in the browser.
 
-Stack: Java 17, Spring Boot 3.5, Spring Web, Spring Data JPA, Spring Security, Bean Validation, PostgreSQL 17, Docker.
+Stack: Java 17, Spring Boot 3.5, Spring Web, Spring Data JPA, Spring Security, Bean Validation, springdoc-openapi (Swagger UI), PostgreSQL 17, Docker.
 
 ## Run it
 
@@ -22,6 +22,7 @@ Stop with `docker compose down`. Add `-v` to also delete the database volume and
 
 ### Try it
 
+- **Browser (Swagger UI):** open http://localhost:8080. It shows every endpoint with a form and an **Execute** button. Start with **Auth → POST /api/auth/login** (the form is filled with `admin` / `admin123`), then try anything else; the browser keeps the login. Log in as `teacher` or `student` to see the 403s.
 - **Postman:** import `postman/University-Management-System.postman_collection.json`. Run a "Login as …" request first; Postman keeps the session cookie, so every later request runs as that user. Log in as someone else to switch roles.
 - **One command that checks everything:** `./scripts/smoke-test.sh` logs in as every role, tries every endpoint, and prints `ok` or `FAIL` for each expected status code.
 - **curl:**
@@ -112,6 +113,7 @@ Every error has the same JSON shape:
 - Requests and replies are DTOs (Java records), never the entities, so the password hash can't leak.
 - `@Valid` checks the request body. Password is required on POST only, using the validation group `OnCreate`.
 - `GlobalExceptionHandler` (`@RestControllerAdvice`) maps exceptions to 400, 404, 405, 409 and 415.
+- Swagger UI (springdoc-openapi) builds an interactive page from the controllers. `OpenApiConfig` adds the login and logout endpoints, which are Spring Security filters rather than controllers, and the real status codes of each endpoint. The page itself is public; the data behind it still needs a login.
 
 ### Spring Security
 
@@ -135,7 +137,8 @@ Every error has the same JSON shape:
 
 ```
 src/main/java/com/example/ums
-├── config/       SecurityConfig (rules, login, logout, BCrypt), DataSeeder (starting accounts)
+├── config/       SecurityConfig (rules, login, logout, BCrypt), DataSeeder (starting accounts),
+│                 OpenApiConfig (Swagger UI)
 ├── controller/   AuthController, AdminController, TeacherController, StudentController
 ├── dto/          request and response records, ApiError, OnCreate
 ├── entity/       AppUser, Admin, Teacher, Student, Role
@@ -151,7 +154,7 @@ src/main/java/com/example/ums
 ./mvnw test
 ```
 
-34 tests run the whole app against an in-memory H2 database (no Docker needed). They cover login and logout, BCrypt storage, the full role matrix, CRUD with every status code, validation, duplicates and the last-admin rule.
+38 tests run the whole app against an in-memory H2 database (no Docker needed). They cover login and logout, BCrypt storage, the full role matrix, CRUD with every status code, validation, duplicates, the last-admin rule and the Swagger page.
 
 ## Run from IntelliJ instead
 

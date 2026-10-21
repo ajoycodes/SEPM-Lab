@@ -45,6 +45,8 @@ public class SecurityConfig {
                 // Role-based access control. The first matching rule wins.
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/login", "/error").permitAll()
+                        // Swagger UI and the API description it reads (the data itself stays protected)
+                        .requestMatchers("/", "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/api/admins/**").hasRole("ADMIN")
                         .requestMatchers("/api/teachers/**").hasAnyRole("ADMIN", "TEACHER")
                         .requestMatchers("/api/students/**").hasAnyRole("ADMIN", "STUDENT")
