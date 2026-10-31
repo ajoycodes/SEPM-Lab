@@ -7,16 +7,16 @@ COPY pom.xml .
 RUN mvn -B dependency:go-offline
 
 COPY src ./src
-# Tests run with ./mvnw test before building the image.
-RUN mvn -B clean package -DskipTests
+# This also runs the tests, so an image is only built if they pass.
+RUN mvn -B package
 
 # ---------- Stage 2: run the jar on a small Java runtime ----------
 FROM eclipse-temurin:17-jre
 WORKDIR /app
 
 # Do not run as root inside the container.
-RUN useradd --system --uid 1001 spring
-USER spring
+RUN useradd --system --uid 1001 university
+USER university
 
 COPY --from=build /app/target/*.jar app.jar
 

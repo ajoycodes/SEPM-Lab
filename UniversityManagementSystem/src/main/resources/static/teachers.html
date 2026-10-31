@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Teachers | University Management System</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="page-soft">
+<header class="site-header">
+  <a class="brand" href="/">
+    <img src="/favicon.svg" alt="" width="30" height="30">
+    <span>University Management System</span>
+  </a>
+  <nav class="site-nav" aria-label="Main">
+    <a href="/teachers.html">Teachers</a>
+    <a href="/#events">Events</a>
+    <a href="/#departments">Departments</a>
+    <a href="/profile.html" id="profile-link" hidden>My profile</a>
+    <span class="signed-in-as" id="signed-in-as" hidden></span>
+    <button class="btn" id="logout-button" hidden>Log out</button>
+    <a class="btn btn-primary" id="signin-link" href="/#sign-in">Sign in</a>
+  </nav>
+</header>
+<main class="section">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <h1 class="page-title">Teachers</h1>
+        <p class="muted">Public profiles, with education and research interests.</p>
+      </div>
+    </div>
+    <div class="filters">
+      <label>Search<input id="teacher-search" type="search" placeholder="Name, department or research field"></label>
+      <label>Department<select id="teacher-department"><option value="">All departments</option></select></label>
+    </div>
+    <p class="muted" id="teacher-count" aria-live="polite"></p>
+    <p class="error" id="teacher-error" role="alert"></p>
+    <div class="person-grid" id="teacher-grid"></div>
+  </div>
+</main>
+<footer class="site-footer"><div class="container">University Management System</div></footer>
+<script src="/js/site.js"></script>
+<script src="/js/teachers.js"></script>
+</body>
+</html>

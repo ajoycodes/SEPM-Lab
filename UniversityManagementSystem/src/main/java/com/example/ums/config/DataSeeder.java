@@ -1,75 +1,40 @@
 package com.example.ums.config;
 
-import com.example.ums.entity.Admin;
-import com.example.ums.entity.Student;
-import com.example.ums.entity.Teacher;
-import com.example.ums.repository.AppUserRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.example.ums.dto.AccountRequest;
+import com.example.ums.entity.Role;
+import com.example.ums.repository.AccountRepository;
+import com.example.ums.service.AccountService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
-/**
- * On the very first start (empty database) creates one account per role, so there is someone to log in as.
- * Passwords come from application.yml / environment variables and are stored as BCrypt hashes.
- */
+/** On the very first start (empty database) creates the first admin, so there is someone to log in as. */
 @Component
 public class DataSeeder implements CommandLineRunner {
 
-    private static final Logger log = LoggerFactory.getLogger(DataSeeder.class);
-
-    private final AppUserRepository appUserRepository;
-    private final PasswordEncoder passwordEncoder;
+    private final AccountRepository accountRepository;
+    private final AccountService accountService;
+    private final String adminEmail;
     private final String adminPassword;
-    private final String teacherPassword;
-    private final String studentPassword;
 
-    public DataSeeder(AppUserRepository appUserRepository, PasswordEncoder passwordEncoder,
-                      @Value("${app.seed.admin-password}") String adminPassword,
-                      @Value("${app.seed.teacher-password}") String teacherPassword,
-                      @Value("${app.seed.student-password}") String studentPassword) {
-        this.appUserRepository = appUserRepository;
-        this.passwordEncoder = passwordEncoder;
+    public DataSeeder(AccountRepository accountRepository, AccountService accountService,
+                      @Value("${app.bootstrap.email}") String adminEmail,
+                      @Value("${app.bootstrap.password}") String adminPassword) {
+        this.accountRepository = accountRepository;
+        this.accountService = accountService;
+        this.adminEmail = adminEmail;
         this.adminPassword = adminPassword;
-        this.teacherPassword = teacherPassword;
-        this.studentPassword = studentPassword;
     }
 
     @Override
     public void run(String... args) {
-        if (appUserRepository.count() > 0) {
+        if (accountRepository.count() > 0) {
             return;
         }
-
-        Admin admin = new Admin();
-        admin.setName("System Admin");
-        admin.setEmail("admin@university.edu");
-        admin.setPhone("+8801700000000");
-        admin.setUsername("admin");
-        admin.setPassword(passwordEncoder.encode(adminPassword));
-
-        Teacher teacher = new Teacher();
-        teacher.setName("Ayesha Rahman");
-        teacher.setEmail("ayesha.rahman@university.edu");
-        teacher.setDepartment("CSE");
-        teacher.setDesignation("Assistant Professor");
-        teacher.setUsername("teacher");
-        teacher.setPassword(passwordEncoder.encode(teacherPassword));
-
-        Student student = new Student();
-        student.setName("Tanvir Hasan");
-        student.setEmail("tanvir.hasan@university.edu");
-        student.setRoll("2107001");
-        student.setDepartment("CSE");
-        student.setBatch(2021);
-        student.setUsername("student");
-        student.setPassword(passwordEncoder.encode(studentPassword));
-
-        appUserRepository.save(admin);
-        appUserRepository.save(teacher);
-        appUserRepository.save(student);
-        log.info("Created the starting accounts: admin, teacher, student");
+        if (adminPassword.length() < 8) {
+            throw new IllegalStateException("Set ADMIN_PASSWORD to at least 8 characters for the first start");
+        }
+        accountService.create(Role.ADMIN, new AccountRequest("University Admin", adminEmail, adminPassword,
+                "Administration", null, null, null, null));
     }
 }

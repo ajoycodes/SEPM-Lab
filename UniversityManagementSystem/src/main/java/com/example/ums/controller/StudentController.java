@@ -1,17 +1,12 @@
 package com.example.ums.controller;
 
-import com.example.ums.dto.OnCreate;
-import com.example.ums.dto.StudentRequest;
-import com.example.ums.dto.StudentResponse;
-import com.example.ums.service.StudentService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import com.example.ums.dto.AccountRequest;
+import com.example.ums.dto.AccountResponse;
+import com.example.ums.entity.Role;
+import com.example.ums.service.AccountService;
 import jakarta.validation.Valid;
-import jakarta.validation.groups.Default;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 import java.util.List;
@@ -19,52 +14,43 @@ import java.util.List;
 /** CRUD for students. Who may call it is decided in SecurityConfig. */
 @RestController
 @RequestMapping("/api/students")
-@Tag(name = "Students")
 public class StudentController {
 
-    private final StudentService studentService;
+    private final AccountService accountService;
 
-    public StudentController(StudentService studentService) {
-        this.studentService = studentService;
+    public StudentController(AccountService accountService) {
+        this.accountService = accountService;
     }
 
     /** 200 OK with the list. */
     @GetMapping
-    @Operation(summary = "List all students")
-    public ResponseEntity<List<StudentResponse>> getAll() {
-        return ResponseEntity.ok(studentService.findAll());
+    public ResponseEntity<List<AccountResponse>> list() {
+        return ResponseEntity.ok(accountService.list(Role.STUDENT));
     }
 
     /** 200 OK, or 404 if the id does not exist. */
     @GetMapping("/{id}")
-    @Operation(summary = "Get one student")
-    public ResponseEntity<StudentResponse> getById(@PathVariable Long id) {
-        return ResponseEntity.ok(studentService.findById(id));
+    public ResponseEntity<AccountResponse> get(@PathVariable Long id) {
+        return ResponseEntity.ok(accountService.get(Role.STUDENT, id));
     }
 
     /** 201 Created with a Location header pointing at the new record. */
     @PostMapping
-    @Operation(summary = "Create a student")
-    public ResponseEntity<StudentResponse> create(
-            @Validated({OnCreate.class, Default.class}) @RequestBody StudentRequest request) {
-        StudentResponse created = studentService.create(request);
-        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
-                .path("/{id}").buildAndExpand(created.id()).toUri();
-        return ResponseEntity.created(location).body(created);
+    public ResponseEntity<AccountResponse> create(@Valid @RequestBody AccountRequest request) {
+        AccountResponse created = accountService.create(Role.STUDENT, request);
+        return ResponseEntity.created(URI.create("/api/students/" + created.id())).body(created);
     }
 
     /** 200 OK with the updated record. Leave "password" out to keep the current one. */
     @PutMapping("/{id}")
-    @Operation(summary = "Update a student")
-    public ResponseEntity<StudentResponse> update(@PathVariable Long id, @Valid @RequestBody StudentRequest request) {
-        return ResponseEntity.ok(studentService.update(id, request));
+    public ResponseEntity<AccountResponse> update(@PathVariable Long id, @Valid @RequestBody AccountRequest request) {
+        return ResponseEntity.ok(accountService.update(Role.STUDENT, id, request));
     }
 
     /** 204 No Content. */
     @DeleteMapping("/{id}")
-    @Operation(summary = "Delete a student")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-        studentService.delete(id);
+        accountService.delete(Role.STUDENT, id);
         return ResponseEntity.noContent().build();
     }
 }

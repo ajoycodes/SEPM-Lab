@@ -1,8 +1,9 @@
 target/
+data/
+.env
 .idea/
 *.iml
 .vscode/
 .DS_Store
-
-# curl cookie files from the README examples
+# curl cookie files
 *.txt

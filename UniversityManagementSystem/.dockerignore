@@ -1,8 +1,12 @@
 target/
+data/
 .git/
+.env
 .idea/
 *.iml
 .vscode/
 .DS_Store
-postman/
 scripts/
+*.pdf
+*.csv
+*.md

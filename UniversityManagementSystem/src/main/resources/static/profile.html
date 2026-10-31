@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Profile | University Management System</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="page-soft">
+<header class="site-header">
+  <a class="brand" href="/">
+    <img src="/favicon.svg" alt="" width="30" height="30">
+    <span>University Management System</span>
+  </a>
+  <nav class="site-nav" aria-label="Main">
+    <a href="/teachers.html">Teachers</a>
+    <a href="/#events">Events</a>
+    <a href="/#departments">Departments</a>
+    <a href="/profile.html" id="profile-link" hidden>My profile</a>
+    <span class="signed-in-as" id="signed-in-as" hidden></span>
+    <button class="btn" id="logout-button" hidden>Log out</button>
+    <a class="btn btn-primary" id="signin-link" href="/#sign-in">Sign in</a>
+  </nav>
+</header>
+<main class="section">
+  <div class="container container-narrow">
+    <p class="error" id="profile-error" role="alert"></p>
+    <p id="profile-signin" hidden><a href="/#sign-in">Sign in</a> to see your own profile.</p>
+
+    <article id="profile-view" hidden>
+      <div class="profile-head">
+        <div class="avatar avatar-large" id="profile-avatar" aria-hidden="true"></div>
+        <h1 class="page-title" id="profile-name"></h1>
+        <p class="muted" id="profile-subtitle"></p>
+        <p class="muted small" id="profile-note"></p>
+        <button class="btn btn-primary" id="edit-profile" hidden>Edit my profile</button>
+      </div>
+      <p class="status" id="profile-status" role="status"></p>
+      <div id="profile-panels"></div>
+    </article>
+
+    <section id="profile-editor" class="panel" hidden>
+      <h2>Edit your information</h2>
+      <form id="profile-form">
+        <div class="form-grid">
+          <label>Full name<input id="edit-name" required maxlength="100" autocomplete="name"></label>
+          <label>Email<input id="edit-email" type="email" required maxlength="200" autocomplete="email"></label>
+          <label>Phone<input id="edit-phone" type="tel" maxlength="40" autocomplete="tel"></label>
+        </div>
+
+        <div id="edit-teacher" hidden>
+          <label>Short bio<textarea id="edit-bio" rows="4" maxlength="2000"></textarea></label>
+          <div class="form-grid">
+            <label>Research field<input id="edit-field" maxlength="160"></label>
+            <label>Research interests<textarea id="edit-interests" rows="3" maxlength="1500"></textarea></label>
+          </div>
+          <div class="sub-head">
+            <h3>Education history</h3>
+            <button class="btn" type="button" id="add-education">Add education</button>
+          </div>
+          <div id="education-rows"></div>
+        </div>
+
+        <div id="edit-student" hidden>
+          <div class="form-grid">
+            <label>Roll<input id="edit-roll" maxlength="50"></label>
+            <label>Department<select id="edit-department"></select></label>
+            <label>Program<input id="edit-program" maxlength="150"></label>
+            <label>CGPA (0 to 4)<input id="edit-cgpa" type="number" min="0" max="4" step="0.01"></label>
+          </div>
+          <div class="sub-head">
+            <h3>Previous semester results</h3>
+            <button class="btn" type="button" id="add-result">Add semester</button>
+          </div>
+          <div id="result-rows"></div>
+        </div>
+
+        <p class="error" id="profile-form-error" role="alert"></p>
+        <div class="form-actions">
+          <button class="btn btn-primary" id="save-profile">Save changes</button>
+          <button class="btn" type="button" id="cancel-profile">Cancel</button>
+        </div>
+      </form>
+    </section>
+
+    <section id="teacher-events" hidden>
+      <div class="section-head">
+        <h2 id="teacher-events-title">Events</h2>
+        <button class="btn btn-primary" id="post-event" hidden>Post event</button>
+      </div>
+      <p class="error" id="events-error" role="alert"></p>
+      <div class="event-grid" id="event-board"></div>
+    </section>
+  </div>
+</main>
+<footer class="site-footer"><div class="container">University Management System</div></footer>
+<script src="/js/site.js"></script>
+<script src="/js/events.js"></script>
+<script src="/js/profile.js"></script>
+</body>
+</html>

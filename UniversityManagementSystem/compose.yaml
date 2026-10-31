@@ -1,35 +1,35 @@
 services:
+  app:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${APP_PORT:-8081}:8080"   # only this computer can reach it
+    environment:
+      SPRING_PROFILES_ACTIVE: postgres
+      DB_HOST: db                            # "db" is the service name below
+      DB_NAME: university
+      DB_USER: university
+      DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@university.edu}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in .env}
+    depends_on:
+      db:
+        condition: service_healthy           # wait until PostgreSQL accepts connections
+
   db:
     image: postgres:17-alpine
+    restart: unless-stopped
     environment:
-      POSTGRES_DB: ums
-      POSTGRES_USER: ums
-      POSTGRES_PASSWORD: ums_password
-    ports:
-      - "5432:5432"   # so IntelliJ / ./mvnw spring-boot:run can also use this database
+      POSTGRES_DB: university
+      POSTGRES_USER: university
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - university_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ums -d ums"]
+      test: ["CMD-SHELL", "pg_isready -U university -d university"]
       interval: 5s
       timeout: 5s
       retries: 10
 
-  app:
-    build: .
-    depends_on:
-      db:
-        condition: service_healthy   # wait until PostgreSQL accepts connections
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/ums   # "db" is the service name above
-      SPRING_DATASOURCE_USERNAME: ums
-      SPRING_DATASOURCE_PASSWORD: ums_password
-      APP_SEED_ADMIN_PASSWORD: admin123
-      APP_SEED_TEACHER_PASSWORD: teacher123
-      APP_SEED_STUDENT_PASSWORD: student123
-    ports:
-      - "8080:8080"
-    restart: on-failure
-
 volumes:
-  pgdata:
+  university_data:

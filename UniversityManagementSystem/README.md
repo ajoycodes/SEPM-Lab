@@ -1,152 +1,133 @@
 # University Management System
 
-CSE 3220 (SEPM Lab), home task for lab 4. A Spring Boot REST API with three roles (Admin, Teacher, Student), Spring Security login and logout, BCrypt password hashing, role-based access control, Docker Compose, and a Swagger UI page for trying it in the browser.
+CSE 3220 (SEPM Lab), home task for lab 4. A Spring Boot application with a website, a JSON REST API, Spring Security (login, logout, password hashing, role-based access) and Docker Compose.
 
-Stack: Java 17, Spring Boot 3.5, Spring Web, Spring Data JPA, Spring Security, Bean Validation, springdoc-openapi (Swagger UI), PostgreSQL 17, Docker.
+Stack: Java 17, Spring Boot 3.5, Spring Web, Spring Data JPA, Spring Security, Bean Validation, PostgreSQL 17 (H2 when run without Docker), Docker, plain HTML, CSS and JavaScript.
 
-## Run it
+## Run with Docker Compose
 
 ```bash
-docker compose up --build
+cp .env.example .env
 ```
 
-This starts two containers: `db` (PostgreSQL) and `app` (this API on http://localhost:8080). The app waits until the database is healthy. On the first start it creates one account per role:
+Edit `.env` and choose `DB_PASSWORD` and `ADMIN_PASSWORD` (at least 8 characters). Then:
 
-| Username | Password | Role |
+```bash
+docker compose up --build -d
+```
+
+Open http://localhost:8081 and sign in with `ADMIN_EMAIL` and `ADMIN_PASSWORD` from `.env`. The first admin is created only when the database is empty.
+
+Stop with `docker compose down`. Add `-v` to also delete the database.
+
+### Demo accounts
+
+To add 60 teachers and 300 students, run this while the app is running:
+
+```bash
+python3 scripts/seed_demo.py
+```
+
+It uses the REST API, checks that all 360 logins work, and writes `demo-accounts.csv` and `DEMO-LOGINS.md`. Every demo account uses the admin password from `.env`. All the people are fictional.
+
+## Run without Docker
+
+```bash
+./mvnw spring-boot:run
+```
+
+Open http://localhost:8080 and sign in with `admin@university.edu` / `Admin123!`. This uses an H2 database file in `data/`, separate from the Docker database. It needs Java 17 or newer.
+
+## Who can do what
+
+| Logged in as | `/api/admins` | `/api/teachers` | `/api/students` |
+|---|---|---|---|
+| Admin | Full CRUD | Full CRUD | Full CRUD |
+| Teacher | 403 | Full CRUD | 403 |
+| Student | 403 | 403 | Full CRUD |
+| Not logged in | 401 | 401 | 401 |
+
+- The role comes from the endpoint and can't be set in the request body. Sending `"role": "ADMIN"` to `/api/students` still creates a student.
+- Only admins can appoint a department head or faculty dean. Each post has one holder, and that person stays a teacher.
+- Only teachers can publish events, and only the author can edit or delete an event.
+- Teacher profiles and events are public. A student's roll, program and grades are visible only to that student, through their own profile.
+
+## REST API
+
+Replace `{resource}` with `admins`, `teachers` or `students`.
+
+| Method | Path | Success |
 |---|---|---|
-| admin | admin123 | ADMIN |
-| teacher | teacher123 | TEACHER |
-| student | student123 | STUDENT |
+| GET | `/api/{resource}` | 200, JSON array |
+| GET | `/api/{resource}/{id}` | 200, JSON object |
+| POST | `/api/{resource}` | 201, JSON object and `Location` header |
+| PUT | `/api/{resource}/{id}` | 200, updated JSON object |
+| DELETE | `/api/{resource}/{id}` | 204, no body |
 
-Stop with `docker compose down`. Add `-v` to also delete the database volume and start fresh.
-
-### Try it
-
-- **Browser (Swagger UI):** open http://localhost:8080. It shows every endpoint with a form and an **Execute** button. Start with **Auth → POST /api/auth/login** (the form is filled with `admin` / `admin123`), then try anything else; the browser keeps the login. Log in as `teacher` or `student` to see the 403s.
-- **Postman:** import `postman/University-Management-System.postman_collection.json`. Run a "Login as …" request first; Postman keeps the session cookie, so every later request runs as that user. Log in as someone else to switch roles.
-- **One command that checks everything:** `./scripts/smoke-test.sh` logs in as every role, tries every endpoint, and prints `ok` or `FAIL` for each expected status code.
-- **curl:**
-
-```bash
-# log in as admin; the session cookie is saved in admin.txt
-curl -c admin.txt -X POST localhost:8080/api/auth/login -d username=admin -d password=admin123
-
-# use the session
-curl -b admin.txt localhost:8080/api/teachers
-
-curl -b admin.txt -X POST localhost:8080/api/teachers -H 'Content-Type: application/json' -d '{
-  "name": "Karim Ahmed", "email": "karim@university.edu", "department": "EEE",
-  "designation": "Lecturer", "username": "karim", "password": "secret123"}'
-
-# log out; the cookie stops working
-curl -b admin.txt -X POST localhost:8080/api/auth/logout
-```
-
-## Endpoints
-
-| Method | Path | What it does | Success |
-|---|---|---|---|
-| POST | `/api/auth/login` | Log in. Form fields `username`, `password` (x-www-form-urlencoded) | 200 + the user |
-| POST | `/api/auth/logout` | Log out, end the session | 200 |
-| GET | `/api/auth/me` | The logged-in user | 200 |
-| GET | `/api/{admins, teachers, students}` | List all | 200 |
-| GET | `/api/{…}/{id}` | Get one | 200 |
-| POST | `/api/{…}` | Create (also creates that person's login) | 201 + `Location` header |
-| PUT | `/api/{…}/{id}` | Update. Leave `password` out to keep the current one | 200 |
-| DELETE | `/api/{…}/{id}` | Delete | 204 |
-
-### Who can do what
-
-| | `/api/admins` | `/api/teachers` | `/api/students` |
-|---|---|---|---|
-| ADMIN | full CRUD | full CRUD | full CRUD |
-| TEACHER | 403 | full CRUD | 403 |
-| STUDENT | 403 | 403 | full CRUD |
-| not logged in | 401 | 401 | 401 |
-
-### Request bodies
+Request body:
 
 ```json
-// POST /api/admins
-{ "name": "Rina Das", "email": "rina@university.edu", "phone": "+8801711111111",
-  "username": "rina", "password": "secret123" }
-
-// POST /api/teachers
-{ "name": "Karim Ahmed", "email": "karim@university.edu", "department": "EEE",
-  "designation": "Lecturer", "username": "karim", "password": "secret123" }
-
-// POST /api/students
-{ "name": "Nusrat Jahan", "email": "nusrat@university.edu", "roll": "2207045",
-  "department": "CSE", "batch": 2022, "username": "nusrat", "password": "secret123" }
+{
+  "name": "Nusrat Jahan",
+  "email": "nusrat@university.edu",
+  "password": "Student123!",
+  "department": "CSE"
+}
 ```
 
-Replies never contain the password. They include `id`, `username` and `role`.
+`name`, `email` and `department` are required. `password` is required when creating; leave it out when updating to keep the current one. Teachers can also have `designation` and `specialization`. Replies never include passwords or hashes.
 
-### Status codes
+Errors are JSON with a `message`: 400 invalid input, 401 not logged in or wrong password, 403 not allowed or missing CSRF token, 404 no such record, 409 email or roll already used.
 
-| Code | When |
-|---|---|
-| 200 OK | GET, PUT, login, logout |
-| 201 Created | POST; the `Location` header points at the new record |
-| 204 No Content | DELETE |
-| 400 Bad Request | Invalid fields (`fieldErrors` lists each one), broken JSON, non-numeric id |
-| 401 Unauthorized | Not logged in, or wrong username/password |
-| 403 Forbidden | Logged in, but your role may not use this resource |
-| 404 Not Found | No record with that id |
-| 405 Method Not Allowed | e.g. `DELETE /api/students` without an id |
-| 409 Conflict | Username, e-mail or roll already used; deleting the last admin |
-| 415 Unsupported Media Type | Body is not sent as JSON |
+### Other endpoints
 
-Every error has the same JSON shape:
+| Method | Path | Who | What |
+|---|---|---|---|
+| GET | `/api/auth/csrf` | Anyone | The CSRF token |
+| POST | `/api/auth/login` | Anyone | Log in with form fields `username` (the email) and `password` |
+| POST | `/api/auth/logout` | Logged in | Log out (204) |
+| GET | `/api/auth/me` | Logged in | The current account |
+| GET, PUT | `/api/profile/me` | Logged in | Your own full profile |
+| GET | `/api/public/teachers`, `/api/public/teachers/{id}` | Anyone | Public teacher profiles |
+| GET | `/api/events`, `/api/events/{id}` | Anyone | Published events |
+| POST | `/api/events` | Teachers | Publish an event |
+| PUT, DELETE | `/api/events/{id}` | The author | Change or delete an event |
+| GET | `/api/academics` | Anyone | Faculties, departments, heads, deans and counts |
 
-```json
-{ "timestamp": "2026-10-21T10:15:30Z", "status": 403, "error": "Forbidden",
-  "message": "Your role is not allowed to access this resource", "path": "/api/students" }
-```
+### Calling the API from Postman or curl
 
-## How each requirement is met
+CSRF protection is on, so the website sends a token automatically but other clients must do it themselves:
 
-### REST API
+1. `GET /api/auth/csrf`. Keep the session cookie. The reply has `token` and `headerName`.
+2. `POST /api/auth/login` with form fields `username` and `password`, the cookie, and the CSRF header.
+3. `GET /api/auth/csrf` again, because Spring issues a new token after login.
+4. Send the cookie on every request, and the CSRF header on every POST, PUT and DELETE.
 
-- One controller per resource (`AdminController`, `TeacherController`, `StudentController`) with GET, GET by id, POST, PUT and DELETE. Plural nouns in the URL, the HTTP method says the action.
-- Controllers return `ResponseEntity` so the status code is explicit: `ok(…)`, `created(location)`, `noContent()`.
-- Requests and replies are DTOs (Java records), never the entities, so the password hash can't leak.
-- `@Valid` checks the request body. Password is required on POST only, using the validation group `OnCreate`.
-- `GlobalExceptionHandler` (`@RestControllerAdvice`) maps exceptions to 400, 404, 405, 409 and 415.
-- Swagger UI (springdoc-openapi) builds an interactive page from the controllers. `OpenApiConfig` adds the login and logout endpoints, which are Spring Security filters rather than controllers, and the real status codes of each endpoint. The page itself is public; the data behind it still needs a login.
+## Website
 
-### Spring Security
+- `/`: homepage with sign-in, the dashboard for managing records, events, and faculties and departments.
+- `/teachers.html`: public teacher directory with search and a department filter.
+- `/profile.html?teacher={id}`: a teacher's public profile.
+- `/profile.html`: your own profile, which you can edit.
 
-- **Login:** Spring Security's form login filter handles `POST /api/auth/login`. `AppUserDetailsService` loads the user from the `users` table, Spring compares the password with the stored hash, and on success keeps the user in the HTTP session (the `JSESSIONID` cookie). The success and failure handlers in `SecurityConfig` reply with JSON instead of redirecting.
-- **Logout:** `POST /api/auth/logout` invalidates the session and deletes the cookie. The old cookie then gets 401.
-- **Password hashing:** `BCryptPasswordEncoder`. Passwords are hashed in `AccountService` before saving, so the database holds `$2a$10$…`, never the plain text. BCrypt adds a random salt and is slow on purpose, so the same password gives a different hash every time.
-- **RBAC:** each user has one role, given to Spring as `ROLE_ADMIN`, `ROLE_TEACHER` or `ROLE_STUDENT`. `SecurityConfig` has one rule per resource (`hasRole`, `hasAnyRole`). Not logged in gives 401, the wrong role gives 403.
-- The role comes from the resource, never from the request body: anything created through `/api/teachers` is a teacher. A teacher cannot create an admin by sending `"role": "ADMIN"`.
-- CSRF protection is off because this is a JSON API used from Postman and curl. The session cookie is `SameSite=Strict` and `HttpOnly` instead, so another website can't send it or read it.
-
-### Docker
-
-- `Dockerfile` has two stages: a Maven image builds the jar, then only the jar is copied onto a small Java 17 runtime image that runs as a non-root user.
-- `compose.yaml` runs `db` (PostgreSQL with a health check and a named volume, so data survives restarts) and `app` (built from the Dockerfile). The app waits for `service_healthy` and reaches the database by its service name, `db`. `SPRING_DATASOURCE_*` environment variables override `application.yml`.
-
-### Data model
-
-`AppUser` holds the fields every role shares (name, email, username, password, role) and is the `users` table. `Admin`, `Teacher` and `Student` extend it with JPA `JOINED` inheritance, so each has its own table (`admins`, `teachers`, `students`) with only its extra columns, linked by the same id. Logging in looks at one table, and usernames and e-mails are unique across all roles.
-
-## Project structure
+## Project layout
 
 ```
 src/main/java/com/example/ums
-├── config/       SecurityConfig (rules, login, logout, BCrypt), DataSeeder (starting accounts),
-│                 OpenApiConfig (Swagger UI)
-├── controller/   AuthController, AdminController, TeacherController, StudentController
-├── dto/          request and response records, ApiError, OnCreate
-├── entity/       AppUser, Admin, Teacher, Student, Role
-├── exception/    ResourceNotFoundException, ConflictException, GlobalExceptionHandler
-├── repository/   Spring Data JPA repositories
-├── security/     AppUserDetailsService (loads a user for login)
-└── service/      AccountService (shared login fields + hashing), Admin/Teacher/StudentService
+├── config/       SecurityConfig (rules, login, logout, BCrypt), DataSeeder (first admin)
+├── controller/   Admin, Teacher, Student, Auth, Profile, Event and Academic controllers
+├── dto/          Request and response records
+├── entity/       Account, EducationEntry, SemesterResult, UniversityEvent, Role
+├── exception/    ApiExceptionHandler (JSON errors)
+├── repository/   AccountRepository, EventRepository
+├── security/     AccountPrincipal, AccountUserDetailsService, CurrentUser
+└── service/      AccountService, ProfileService, EventService, AcademicCatalog
+src/main/resources
+├── static/       The website: HTML, CSS and JavaScript
+└── academics.json   Faculties and departments, based on KUET
 ```
+
+One `accounts` table stores everyone, with a `role` column. Three controllers give each role its own REST collection.
 
 ## Tests
 
@@ -154,8 +135,10 @@ src/main/java/com/example/ums
 ./mvnw test
 ```
 
-38 tests run the whole app against an in-memory H2 database (no Docker needed). They cover login and logout, BCrypt storage, the full role matrix, CRUD with every status code, validation, duplicates, the last-admin rule and the Swagger page.
+41 tests run the whole app against an in-memory database, through the real Spring Security filters. They cover login and logout, CSRF, BCrypt storage, the full role matrix, CRUD, validation, duplicates, profiles, events and departments.
 
-## Run from IntelliJ instead
+## Known limits
 
-Start only the database with `docker compose up -d db`, then run `UniversityManagementApplication`. `application.yml` already points at `localhost:5432`.
+- With the rule above, a teacher can change another teacher's password, and a student can change another student's.
+- Nothing stops the last admin account from being deleted, and there is no account recovery. If that happens, reset with `docker compose down -v`.
+- Tables are created by Hibernate (`ddl-auto=update`), which suits a class project. A production system would use versioned migrations and HTTPS.
