@@ -41,11 +41,8 @@ public class SecurityConfig {
                         // Web pages, and data that is public on purpose
                         .requestMatchers("/", "/index.html", "/teachers.html", "/profile.html",
                                 "/favicon.svg", "/css/**", "/js/**", "/error").permitAll()
-                        .requestMatchers("/api/auth/csrf", "/api/auth/login", "/api/academics").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/public/teachers", "/api/public/teachers/*",
-                                "/api/events", "/api/events/*").permitAll()
-                        // Only teachers publish events
-                        .requestMatchers("/api/events", "/api/events/*").hasRole("TEACHER")
+                        .requestMatchers("/api/auth/csrf", "/api/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/public/teachers", "/api/public/teachers/*").permitAll()
                         // Admins manage all three resources, teachers only teachers, students only students
                         .requestMatchers("/api/admins", "/api/admins/**").hasRole("ADMIN")
                         .requestMatchers("/api/teachers", "/api/teachers/**").hasAnyRole("ADMIN", "TEACHER")

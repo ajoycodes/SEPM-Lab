@@ -1,7 +1,7 @@
 """Fills the running app with demo people through its REST API, then checks that every login works.
 
-Creates 60 teachers and 300 students (3 and 15 per department), with one head per department and one
-dean per faculty. Everyone is fictional, and everyone gets the admin password from .env.
+Creates 60 teachers and 300 students (3 and 15 per department). Everyone is fictional, and everyone
+gets the admin password from .env.
 Writes demo-accounts.csv and DEMO-LOGINS.md. Safe to run again: existing accounts are updated.
 
 Usage, after `docker compose up`:  python3 scripts/seed_demo.py
@@ -20,7 +20,31 @@ CONFIG = dict(line.split('=', 1) for line in (ROOT / '.env').read_text().splitli
 BASE = 'http://127.0.0.1:' + CONFIG.get('APP_PORT', '8081')
 ADMIN_EMAIL = CONFIG.get('ADMIN_EMAIL', 'admin@university.edu')
 PASSWORD = CONFIG['ADMIN_PASSWORD']
-FACULTIES = json.loads((ROOT / 'src/main/resources/academics.json').read_text())['faculties']
+
+# Department code, name, and one specialization for each of its three teachers.
+DEPARTMENTS = [
+    ('CE', 'Civil Engineering', ['Structural Engineering', 'Geotechnical Engineering', 'Transportation Engineering']),
+    ('URP', 'Urban and Regional Planning', ['Urban Design', 'Regional Planning', 'Transport Planning']),
+    ('BECM', 'Building Engineering and Construction Management', ['Construction Management', 'Building Services', 'Construction Materials']),
+    ('ARCH', 'Architecture', ['Architectural Design', 'Sustainable Architecture', 'Urban Heritage']),
+    ('EEE', 'Electrical and Electronic Engineering', ['Power Systems', 'Control Systems', 'Electronics']),
+    ('CSE', 'Computer Science and Engineering', ['Artificial Intelligence', 'Software Engineering', 'Computer Networks']),
+    ('ECE', 'Electronics and Communication Engineering', ['Wireless Communication', 'Signal Processing', 'Embedded Systems']),
+    ('BME', 'Biomedical Engineering', ['Medical Instrumentation', 'Biomedical Imaging', 'Biomaterials']),
+    ('MSE', 'Materials Science and Engineering', ['Advanced Materials', 'Materials Characterization', 'Nanomaterials']),
+    ('ME', 'Mechanical Engineering', ['Thermal Engineering', 'Fluid Mechanics', 'Machine Design']),
+    ('IEM', 'Industrial Engineering and Management', ['Operations Research', 'Manufacturing Systems', 'Supply Chain Management']),
+    ('ESE', 'Energy Science and Engineering', ['Renewable Energy', 'Energy Systems', 'Energy Efficiency']),
+    ('LE', 'Leather Engineering', ['Leather Processing', 'Leather Products', 'Environmental Management']),
+    ('TE', 'Textile Engineering', ['Textile Manufacturing', 'Fabric Engineering', 'Textile Chemistry']),
+    ('CHE', 'Chemical Engineering', ['Reaction Engineering', 'Process Engineering', 'Separation Processes']),
+    ('MTE', 'Mechatronics Engineering', ['Robotics', 'Automation', 'Intelligent Control']),
+    ('MATH', 'Mathematics', ['Applied Mathematics', 'Numerical Analysis', 'Mathematical Modeling']),
+    ('PHY', 'Physics', ['Solid State Physics', 'Optics', 'Computational Physics']),
+    ('CHEM', 'Chemistry', ['Analytical Chemistry', 'Organic Chemistry', 'Physical Chemistry']),
+    ('HUM', 'Humanities and Business', ['Economics', 'English Communication', 'Business Management']),
+]
+DESIGNATIONS = ['Professor', 'Associate Professor', 'Lecturer']
 
 FIRST_NAMES = ['Mahmud', 'Tahmina', 'Rezaul', 'Sharmin', 'Kamrul', 'Nasrin', 'Shafiq', 'Rumana', 'Mehedi', 'Farzana',
                'Anisur', 'Lamia', 'Habib', 'Sabrina', 'Jahid', 'Tania', 'Mizan', 'Rokeya', 'Shakil', 'Munira']
@@ -74,59 +98,49 @@ def build_people():
     people = []
     teacher_index = 0
     student_index = 60
-    for faculty in FACULTIES:
-        for department_index, department in enumerate(faculty['departments']):
-            code = department['code'].lower()
-            for number in range(1, 4):
-                head = number == 1
-                dean = department_index == 0 and number == 2
-                body = {
-                    'name': person_name(teacher_index, teacher=True),
-                    'email': f'{code}.teacher{number:02d}@university.edu',
-                    'password': PASSWORD,
-                    'department': department['name'],
-                    'designation': 'Professor' if head or dean else ('Associate Professor' if number == 2 else 'Lecturer'),
-                    'specialization': department['specializations'][number - 1],
-                    'departmentHead': head,
-                    'facultyDean': dean,
-                }
-                teacher_index += 1
-                people.append(('teachers', faculty, department, body))
-            for number in range(1, 16):
-                body = {
-                    'name': person_name(student_index),
-                    'email': f'{code}.student{number:02d}@university.edu',
-                    'password': PASSWORD,
-                    'department': department['name'],
-                }
-                student_index += 1
-                people.append(('students', faculty, department, body))
+    for code, department, specializations in DEPARTMENTS:
+        code = code.lower()
+        for number in range(1, 4):
+            people.append(('teachers', {
+                'name': person_name(teacher_index, teacher=True),
+                'email': f'{code}.teacher{number:02d}@university.edu',
+                'password': PASSWORD,
+                'department': department,
+                'designation': DESIGNATIONS[number - 1],
+                'specialization': specializations[number - 1],
+            }))
+            teacher_index += 1
+        for number in range(1, 16):
+            people.append(('students', {
+                'name': person_name(student_index),
+                'email': f'{code}.student{number:02d}@university.edu',
+                'password': PASSWORD,
+                'department': department,
+            }))
+            student_index += 1
     return people
 
 
 def write_files(people):
     with (ROOT / 'demo-accounts.csv').open('w', newline='', encoding='utf-8') as output:
         writer = csv.writer(output)
-        writer.writerow(['role', 'faculty', 'department', 'name', 'email', 'password', 'designation', 'head', 'dean'])
-        writer.writerow(['ADMIN', '', '', 'University Admin', ADMIN_EMAIL, PASSWORD, '', '', ''])
-        for resource, faculty, department, body in people:
-            writer.writerow(['TEACHER' if resource == 'teachers' else 'STUDENT', faculty['name'], department['name'],
-                             body['name'], body['email'], PASSWORD, body.get('designation', ''),
-                             body.get('departmentHead', ''), body.get('facultyDean', '')])
+        writer.writerow(['role', 'department', 'name', 'email', 'password', 'designation'])
+        writer.writerow(['ADMIN', 'Administration', 'University Admin', ADMIN_EMAIL, PASSWORD, ''])
+        for resource, body in people:
+            writer.writerow(['TEACHER' if resource == 'teachers' else 'STUDENT', body['department'], body['name'],
+                             body['email'], PASSWORD, body.get('designation', '')])
 
     lines = ['# Demo logins', '',
-             'Everyone here is fictional. The departments are based on KUET.', '',
+             'Everyone here is fictional.', '',
              f'Password for every account: `{PASSWORD}`', '',
              f'Admin: `{ADMIN_EMAIL}`', '',
-             'Each department has 3 teachers and 15 students. `teacher01` is the department head.',
-             '`teacher02` in the first department of each faculty is the dean.', '',
+             'Each department has 3 teachers and 15 students.', '',
              '| Code | Department | Teachers | Students |', '|---|---|---|---|']
-    for faculty in FACULTIES:
-        for department in faculty['departments']:
-            code = department['code'].lower()
-            lines.append(f"| {department['code']} | {department['name']} | "
-                         f"`{code}.teacher01@university.edu` to `{code}.teacher03@university.edu` | "
-                         f"`{code}.student01@university.edu` to `{code}.student15@university.edu` |")
+    for code, department, _ in DEPARTMENTS:
+        lower = code.lower()
+        lines.append(f"| {code} | {department} | "
+                     f"`{lower}.teacher01@university.edu` to `{lower}.teacher03@university.edu` | "
+                     f"`{lower}.student01@university.edu` to `{lower}.student15@university.edu` |")
     (ROOT / 'DEMO-LOGINS.md').write_text('\n'.join(lines) + '\n', encoding='utf-8')
 
 
@@ -137,7 +151,7 @@ def main():
                 for row in admin.call('/api/' + resource)}
     people = build_people()
 
-    for count, (resource, _, _, body) in enumerate(people, 1):
+    for count, (resource, body) in enumerate(people, 1):
         account = existing.get(body['email'])
         if account:
             admin.call(f"/api/{resource}/{account['id']}", 'PUT', body)
@@ -145,27 +159,20 @@ def main():
             admin.call('/api/' + resource, 'POST', body, expected=201)
         if count % 60 == 0:
             print(f'Saved {count}/{len(people)} accounts', flush=True)
-
-    catalog = admin.call('/api/academics')
-    departments = [department for faculty in catalog['faculties'] for department in faculty['departments']]
-    assert len(catalog['faculties']) == 4 and len(departments) == 20
-    assert all(faculty['dean'] for faculty in catalog['faculties'])
-    assert all(d['head'] and d['teachers'] >= 3 and d['students'] >= 15 for d in departments)
     write_files(people)
 
-    for count, (resource, faculty, department, body) in enumerate(people, 1):
+    for count, (resource, body) in enumerate(people, 1):
         client = Client()
         client.login(body['email'])
         me = client.call('/api/auth/me')
-        assert me['email'] == body['email']
-        assert me['department'] == department['name'] and me['faculty'] == faculty['name']
+        assert me['email'] == body['email'] and me['department'] == body['department']
         assert me['role'] == ('TEACHER' if resource == 'teachers' else 'STUDENT')
         client.call('/api/auth/logout', 'POST', expected=204)
         if count % 60 == 0:
             print(f'Checked {count}/{len(people)} logins', flush=True)
 
     admin.call('/api/auth/logout', 'POST', expected=204)
-    print('Done: 60 teachers, 300 students, 20 heads, 4 deans. All 360 logins work.', flush=True)
+    print('Done: 60 teachers and 300 students. All 360 logins work.', flush=True)
 
 
 if __name__ == '__main__':

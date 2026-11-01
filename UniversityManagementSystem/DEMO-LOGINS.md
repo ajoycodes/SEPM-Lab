@@ -1,13 +1,12 @@
 # Demo logins
 
-Everyone here is fictional. The departments are based on KUET.
+Everyone here is fictional.
 
 Password for every account: `Admin123!`
 
 Admin: `admin@university.edu`
 
-Each department has 3 teachers and 15 students. `teacher01` is the department head.
-`teacher02` in the first department of each faculty is the dean.
+Each department has 3 teachers and 15 students.
 
 | Code | Department | Teachers | Students |
 |---|---|---|---|

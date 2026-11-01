@@ -1,7 +1,6 @@
 package com.example.ums.security;
 
 import com.example.ums.entity.Account;
-import com.example.ums.entity.Role;
 import com.example.ums.repository.AccountRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -27,12 +26,5 @@ public class CurrentUser {
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Please sign in again"));
         }
         throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Please sign in again");
-    }
-
-    public boolean isAdmin() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return authentication != null
-                && authentication.getPrincipal() instanceof AccountPrincipal principal
-                && principal.role() == Role.ADMIN;
     }
 }

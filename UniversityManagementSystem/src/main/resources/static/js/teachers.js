@@ -6,10 +6,8 @@
 
   function render() {
     const query = $('teacher-search').value.trim().toLowerCase();
-    const department = $('teacher-department').value;
     const shown = teachers.filter(teacher =>
-      (!department || teacher.department === department)
-      && [teacher.name, teacher.department, teacher.designation, teacher.researchField, teacher.researchInterests]
+      [teacher.name, teacher.department, teacher.designation, teacher.researchField, teacher.researchInterests]
         .some(value => (value || '').toLowerCase().includes(query)));
 
     $('teacher-count').textContent = `${shown.length} teachers`;
@@ -26,21 +24,14 @@
     avatar.setAttribute('aria-hidden', 'true');
     link.append(avatar, el('h2', teacher.name), el('p', teacher.designation || 'Teacher'), el('p', teacher.department, 'muted'));
     if (teacher.researchField) link.append(el('p', teacher.researchField, 'muted'));
-    const posts = [teacher.departmentHead && 'Department head', teacher.facultyDean && 'Faculty dean'].filter(Boolean);
-    if (posts.length) link.append(el('p', posts.join(', '), 'tags'));
     return link;
   }
 
   $('teacher-search').oninput = render;
-  $('teacher-department').onchange = render;
 
   (async () => {
     await loadUser();
     teachers = await request('/api/public/teachers');
-    const departments = [...new Set(teachers.map(teacher => teacher.department))].sort();
-    for (const name of departments) {
-      $('teacher-department').add(new Option(name, name));
-    }
     render();
   })().catch(error => {
     $('teacher-error').textContent = error.message;

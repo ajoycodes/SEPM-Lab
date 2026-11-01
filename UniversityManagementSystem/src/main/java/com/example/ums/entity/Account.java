@@ -47,12 +47,6 @@ public class Account {
     @Column(length = 160)
     private String specialization;
 
-    @Column(nullable = false)
-    private boolean departmentHead;
-
-    @Column(nullable = false)
-    private boolean facultyDean;
-
     @Column(length = 2000)
     private String bio;
 
@@ -145,22 +139,6 @@ public class Account {
 
     public void setSpecialization(String specialization) {
         this.specialization = specialization;
-    }
-
-    public boolean isDepartmentHead() {
-        return departmentHead;
-    }
-
-    public void setDepartmentHead(boolean departmentHead) {
-        this.departmentHead = departmentHead;
-    }
-
-    public boolean isFacultyDean() {
-        return facultyDean;
-    }
-
-    public void setFacultyDean(boolean facultyDean) {
-        this.facultyDean = facultyDean;
     }
 
     public String getBio() {

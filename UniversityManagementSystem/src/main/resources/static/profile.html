@@ -15,8 +15,6 @@
   </a>
   <nav class="site-nav" aria-label="Main">
     <a href="/teachers.html">Teachers</a>
-    <a href="/#events">Events</a>
-    <a href="/#departments">Departments</a>
     <a href="/profile.html" id="profile-link" hidden>My profile</a>
     <span class="signed-in-as" id="signed-in-as" hidden></span>
     <button class="btn" id="logout-button" hidden>Log out</button>
@@ -65,7 +63,7 @@
         <div id="edit-student" hidden>
           <div class="form-grid">
             <label>Roll<input id="edit-roll" maxlength="50"></label>
-            <label>Department<select id="edit-department"></select></label>
+            <label>Department<input id="edit-department" maxlength="100"></label>
             <label>Program<input id="edit-program" maxlength="150"></label>
             <label>CGPA (0 to 4)<input id="edit-cgpa" type="number" min="0" max="4" step="0.01"></label>
           </div>
@@ -83,20 +81,10 @@
         </div>
       </form>
     </section>
-
-    <section id="teacher-events" hidden>
-      <div class="section-head">
-        <h2 id="teacher-events-title">Events</h2>
-        <button class="btn btn-primary" id="post-event" hidden>Post event</button>
-      </div>
-      <p class="error" id="events-error" role="alert"></p>
-      <div class="event-grid" id="event-board"></div>
-    </section>
   </div>
 </main>
 <footer class="site-footer"><div class="container">University Management System</div></footer>
 <script src="/js/site.js"></script>
-<script src="/js/events.js"></script>
 <script src="/js/profile.js"></script>
 </body>
 </html>

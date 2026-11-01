@@ -28,13 +28,10 @@ import java.util.Set;
 public class ProfileService {
 
     private final AccountRepository accountRepository;
-    private final AcademicCatalog academicCatalog;
     private final CurrentUser currentUser;
 
-    public ProfileService(AccountRepository accountRepository, AcademicCatalog academicCatalog,
-                          CurrentUser currentUser) {
+    public ProfileService(AccountRepository accountRepository, CurrentUser currentUser) {
         this.accountRepository = accountRepository;
-        this.academicCatalog = academicCatalog;
         this.currentUser = currentUser;
     }
 
@@ -107,9 +104,9 @@ public class ProfileService {
         account.setRoll(roll);
 
         if (request.department() != null) {
-            String department = academicCatalog.departmentName(request.department().strip());
-            if (academicCatalog.facultyName(department).isEmpty()) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Select a listed department");
+            String department = request.department().strip();
+            if (department.isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Department can't be empty");
             }
             account.setDepartment(department);
         }
@@ -143,9 +140,8 @@ public class ProfileService {
                         entry.getStartYear(), entry.getEndYear()))
                 .toList();
         return new TeacherProfile(account.getId(), account.getName(), account.getEmail(), account.getPhone(),
-                account.getDepartment(), academicCatalog.facultyName(account.getDepartment()),
-                account.getDesignation(), account.isDepartmentHead(), account.isFacultyDean(), account.getBio(),
-                education, account.getSpecialization(), account.getResearchInterests());
+                account.getDepartment(), account.getDesignation(), account.getBio(), education,
+                account.getSpecialization(), account.getResearchInterests());
     }
 
     private StudentProfile studentProfile(Account account) {
@@ -153,8 +149,7 @@ public class ProfileService {
                 .map(result -> new SemesterResultDto(result.getSemester(), result.getGpa()))
                 .toList();
         return new StudentProfile(account.getId(), account.getName(), account.getEmail(), account.getPhone(),
-                account.getRoll(), account.getDepartment(), academicCatalog.facultyName(account.getDepartment()),
-                account.getProgram(), account.getCgpa(), results);
+                account.getRoll(), account.getDepartment(), account.getProgram(), account.getCgpa(), results);
     }
 
     private static String clean(String value) {

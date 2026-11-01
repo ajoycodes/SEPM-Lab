@@ -5,7 +5,6 @@ import com.example.ums.dto.AccountResponse;
 import com.example.ums.entity.Account;
 import com.example.ums.entity.Role;
 import com.example.ums.repository.AccountRepository;
-import com.example.ums.security.CurrentUser;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -24,15 +23,10 @@ public class AccountService {
 
     private final AccountRepository accountRepository;
     private final PasswordEncoder passwordEncoder;
-    private final AcademicCatalog academicCatalog;
-    private final CurrentUser currentUser;
 
-    public AccountService(AccountRepository accountRepository, PasswordEncoder passwordEncoder,
-                          AcademicCatalog academicCatalog, CurrentUser currentUser) {
+    public AccountService(AccountRepository accountRepository, PasswordEncoder passwordEncoder) {
         this.accountRepository = accountRepository;
         this.passwordEncoder = passwordEncoder;
-        this.academicCatalog = academicCatalog;
-        this.currentUser = currentUser;
     }
 
     @Transactional(readOnly = true)
@@ -64,8 +58,7 @@ public class AccountService {
 
     public AccountResponse toResponse(Account account) {
         return new AccountResponse(account.getId(), account.getName(), account.getEmail(), account.getDepartment(),
-                account.getRole(), academicCatalog.facultyName(account.getDepartment()), account.getDesignation(),
-                account.getSpecialization(), account.isDepartmentHead(), account.isFacultyDean());
+                account.getRole(), account.getDesignation(), account.getSpecialization());
     }
 
     private Account find(Role role, Long id) {
@@ -74,9 +67,6 @@ public class AccountService {
     }
 
     private AccountResponse save(Account account, AccountRequest request) {
-        String department = academicCatalog.departmentName(request.department().strip());
-        applyLeadership(account, department, request);
-
         String email = request.email().strip().toLowerCase(Locale.ROOT);
         accountRepository.findByEmail(email)
                 .filter(other -> !Objects.equals(other.getId(), account.getId()))
@@ -94,7 +84,7 @@ public class AccountService {
 
         account.setName(request.name().strip());
         account.setEmail(email);
-        account.setDepartment(department);
+        account.setDepartment(request.department().strip());
         if (account.getRole() == Role.TEACHER) {
             if (request.designation() != null) {
                 account.setDesignation(request.designation().strip());
@@ -104,37 +94,5 @@ public class AccountService {
             }
         }
         return toResponse(accountRepository.saveAndFlush(account));
-    }
-
-    /** Only admins appoint a department head or faculty dean, and each post can have one holder. */
-    private void applyLeadership(Account account, String department, AccountRequest request) {
-        boolean head = request.departmentHead() == null ? account.isDepartmentHead() : request.departmentHead();
-        boolean dean = request.facultyDean() == null ? account.isFacultyDean() : request.facultyDean();
-        boolean changed = head != account.isDepartmentHead() || dean != account.isFacultyDean()
-                || ((head || dean) && !department.equals(account.getDepartment()));
-        if (changed && !currentUser.isAdmin()) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                    "Only admins can appoint department heads and faculty deans");
-        }
-        if (head || dean) {
-            String faculty = academicCatalog.facultyName(department);
-            if (account.getRole() != Role.TEACHER || faculty.isEmpty()) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                        "A head or dean must be a teacher in a listed department");
-            }
-            for (Account other : accountRepository.findByRoleOrderByIdAsc(Role.TEACHER)) {
-                if (Objects.equals(other.getId(), account.getId())) {
-                    continue;
-                }
-                if (head && other.isDepartmentHead() && academicCatalog.departmentName(other.getDepartment()).equals(department)) {
-                    throw new ResponseStatusException(HttpStatus.CONFLICT, "This department already has a head");
-                }
-                if (dean && other.isFacultyDean() && academicCatalog.facultyName(other.getDepartment()).equals(faculty)) {
-                    throw new ResponseStatusException(HttpStatus.CONFLICT, "This faculty already has a dean");
-                }
-            }
-        }
-        account.setDepartmentHead(head);
-        account.setFacultyDean(dean);
     }
 }

@@ -45,13 +45,7 @@
     const about = panel('About');
     about.append(el('p', profile.bio || 'No bio added yet.', profile.bio ? 'prose' : 'muted'));
 
-    const posts = [profile.departmentHead && 'Department head', profile.facultyDean && 'Faculty dean'].filter(Boolean);
-    facts(panel('Appointment'), [
-      ['Department', profile.department],
-      ['Faculty', profile.faculty],
-      ['Designation', profile.designation],
-      ['Leadership', posts.join(', ') || 'None'],
-    ]);
+    facts(panel('Appointment'), [['Department', profile.department], ['Designation', profile.designation]]);
     facts(panel('Research'), [['Field', profile.researchField], ['Interests', profile.researchInterests]]);
 
     const education = panel('Education');
@@ -74,7 +68,6 @@
     facts(panel('Academic information'), [
       ['Roll', profile.roll],
       ['Department', profile.department],
-      ['Faculty', profile.faculty],
       ['Program', profile.program],
       ['CGPA', profile.cgpa === null ? null : Number(profile.cgpa).toFixed(2)],
     ]);
@@ -152,7 +145,7 @@
     $('result-rows').append(row);
   }
 
-  async function openEditor() {
+  function openEditor() {
     $('profile-form-error').textContent = '';
     $('edit-name').value = profile.name;
     $('edit-email').value = profile.email;
@@ -171,18 +164,8 @@
       $('edit-roll').value = profile.roll ?? '';
       $('edit-program').value = profile.program ?? '';
       $('edit-cgpa').value = profile.cgpa ?? '';
-      profile.semesterResults.forEach(addResultRow);
-      const catalog = await request('/api/academics');
-      $('edit-department').replaceChildren();
-      for (const faculty of catalog.faculties) {
-        const group = el('optgroup');
-        group.label = faculty.name;
-        for (const department of faculty.departments) {
-          group.append(new Option(department.name, department.name));
-        }
-        $('edit-department').append(group);
-      }
       $('edit-department').value = profile.department;
+      profile.semesterResults.forEach(addResultRow);
     }
     $('profile-editor').hidden = false;
     $('profile-editor').scrollIntoView();
@@ -218,9 +201,7 @@
     return json;
   }
 
-  $('edit-profile').onclick = () => openEditor().catch(error => {
-    $('profile-error').textContent = error.message;
-  });
+  $('edit-profile').onclick = openEditor;
   $('cancel-profile').onclick = () => {
     $('profile-editor').hidden = true;
   };
@@ -260,12 +241,6 @@
     }
     render();
     $('edit-profile').hidden = !(me && me.id === profile.id);
-    if (kind === 'TEACHER') {
-      $('teacher-events').hidden = false;
-      $('teacher-events-title').textContent = me && me.id === profile.id ? 'My events' : `Events by ${profile.name}`;
-      EventBoard.forAuthor(profile.id);
-      await EventBoard.refresh();
-    }
   })().catch(error => {
     $('profile-error').textContent = error.message;
   });

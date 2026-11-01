@@ -48,9 +48,7 @@ Open http://localhost:8080 and sign in with `admin@university.edu` / `Admin123!`
 | Not logged in | 401 | 401 | 401 |
 
 - The role comes from the endpoint and can't be set in the request body. Sending `"role": "ADMIN"` to `/api/students` still creates a student.
-- Only admins can appoint a department head or faculty dean. Each post has one holder, and that person stays a teacher.
-- Only teachers can publish events, and only the author can edit or delete an event.
-- Teacher profiles and events are public. A student's roll, program and grades are visible only to that student, through their own profile.
+- Teacher profiles are public. A student's roll, program and grades are visible only to that student, through their own profile.
 
 ## REST API
 
@@ -71,7 +69,7 @@ Request body:
   "name": "Nusrat Jahan",
   "email": "nusrat@university.edu",
   "password": "Student123!",
-  "department": "CSE"
+  "department": "Computer Science and Engineering"
 }
 ```
 
@@ -89,10 +87,6 @@ Errors are JSON with a `message`: 400 invalid input, 401 not logged in or wrong 
 | GET | `/api/auth/me` | Logged in | The current account |
 | GET, PUT | `/api/profile/me` | Logged in | Your own full profile |
 | GET | `/api/public/teachers`, `/api/public/teachers/{id}` | Anyone | Public teacher profiles |
-| GET | `/api/events`, `/api/events/{id}` | Anyone | Published events |
-| POST | `/api/events` | Teachers | Publish an event |
-| PUT, DELETE | `/api/events/{id}` | The author | Change or delete an event |
-| GET | `/api/academics` | Anyone | Faculties, departments, heads, deans and counts |
 
 ### Calling the API from Postman or curl
 
@@ -105,8 +99,8 @@ CSRF protection is on, so the website sends a token automatically but other clie
 
 ## Website
 
-- `/`: homepage with sign-in, the dashboard for managing records, events, and faculties and departments.
-- `/teachers.html`: public teacher directory with search and a department filter.
+- `/`: homepage with sign-in, and the dashboard for managing records.
+- `/teachers.html`: public teacher directory with search.
 - `/profile.html?teacher={id}`: a teacher's public profile.
 - `/profile.html`: your own profile, which you can edit.
 
@@ -115,16 +109,14 @@ CSRF protection is on, so the website sends a token automatically but other clie
 ```
 src/main/java/com/example/ums
 ├── config/       SecurityConfig (rules, login, logout, BCrypt), DataSeeder (first admin)
-├── controller/   Admin, Teacher, Student, Auth, Profile, Event and Academic controllers
+├── controller/   Admin, Teacher, Student, Auth and Profile controllers
 ├── dto/          Request and response records
-├── entity/       Account, EducationEntry, SemesterResult, UniversityEvent, Role
+├── entity/       Account, EducationEntry, SemesterResult, Role
 ├── exception/    ApiExceptionHandler (JSON errors)
-├── repository/   AccountRepository, EventRepository
+├── repository/   AccountRepository
 ├── security/     AccountPrincipal, AccountUserDetailsService, CurrentUser
-└── service/      AccountService, ProfileService, EventService, AcademicCatalog
-src/main/resources
-├── static/       The website: HTML, CSS and JavaScript
-└── academics.json   Faculties and departments, based on KUET
+└── service/      AccountService, ProfileService
+src/main/resources/static/   The website: HTML, CSS and JavaScript
 ```
 
 One `accounts` table stores everyone, with a `role` column. Three controllers give each role its own REST collection.
@@ -135,7 +127,7 @@ One `accounts` table stores everyone, with a `role` column. Three controllers gi
 ./mvnw test
 ```
 
-41 tests run the whole app against an in-memory database, through the real Spring Security filters. They cover login and logout, CSRF, BCrypt storage, the full role matrix, CRUD, validation, duplicates, profiles, events and departments.
+31 tests run the whole app against an in-memory database, through the real Spring Security filters. They cover login and logout, CSRF, BCrypt storage, the full role matrix, CRUD, validation, duplicates and profiles.
 
 ## Known limits
 

@@ -35,6 +35,6 @@ public class DataSeeder implements CommandLineRunner {
             throw new IllegalStateException("Set ADMIN_PASSWORD to at least 8 characters for the first start");
         }
         accountService.create(Role.ADMIN, new AccountRequest("University Admin", adminEmail, adminPassword,
-                "Administration", null, null, null, null));
+                "Administration", null, null));
     }
 }

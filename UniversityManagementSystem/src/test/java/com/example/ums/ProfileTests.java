@@ -91,6 +91,9 @@ class ProfileTests extends ApiTestSupport {
         mvc.perform(put("/api/profile/me").session(session).with(csrf()).contentType("application/json")
                 .content(ownBody(student, ",\"roll\":\"" + other.getRoll() + "\""))).andExpect(status().isConflict());
 
+        mvc.perform(put("/api/profile/me").session(session).with(csrf()).contentType("application/json")
+                .content(ownBody(student, ",\"department\":\"  \""))).andExpect(status().isBadRequest());
+
         Account teacher = account(Role.TEACHER);
         mvc.perform(put("/api/profile/me").session(loginAs(teacher)).with(csrf()).contentType("application/json")
                 .content(ownBody(teacher, ",\"education\":[{\"qualification\":\"MSc\",\"institution\":\"U\","

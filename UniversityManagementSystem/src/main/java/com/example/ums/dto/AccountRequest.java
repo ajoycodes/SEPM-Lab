@@ -14,7 +14,5 @@ public record AccountRequest(
         @Size(min = 8, max = 72) String password,
         @NotBlank @Size(max = 100) String department,
         @Size(max = 100) String designation,
-        @Size(max = 160) String specialization,
-        Boolean departmentHead,
-        Boolean facultyDean) {
+        @Size(max = 160) String specialization) {
 }

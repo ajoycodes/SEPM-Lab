@@ -15,8 +15,6 @@
   </a>
   <nav class="site-nav" aria-label="Main">
     <a href="/teachers.html">Teachers</a>
-    <a href="#events">Events</a>
-    <a href="#departments">Departments</a>
     <a href="/profile.html" id="profile-link" hidden>My profile</a>
     <span class="signed-in-as" id="signed-in-as" hidden></span>
     <button class="btn" id="logout-button" hidden>Log out</button>
@@ -27,12 +25,11 @@
   <section class="hero">
     <div class="container">
       <h1>Run your university<br>from one place.</h1>
-      <p>Admins, teachers and students sign in to manage their records. Teacher profiles and events are open to everyone.</p>
+      <p>Admins, teachers and students sign in to manage their records. Teacher profiles are open to everyone.</p>
       <div class="hero-actions">
         <a class="btn btn-primary btn-large" id="hero-signin" href="/#sign-in">Sign in</a>
         <a class="link-more" href="/teachers.html">Browse teachers</a>
       </div>
-      <dl class="hero-counts" id="hero-counts"></dl>
     </div>
   </section>
 
@@ -48,8 +45,6 @@
       <div class="tabs" id="tabs" role="tablist"></div>
       <div class="filters">
         <label>Search<input id="record-search" type="search" placeholder="Name, email or department"></label>
-        <label>Faculty<select id="faculty-filter"></select></label>
-        <label>Department<select id="department-filter"></select></label>
       </div>
       <p class="muted" id="record-count" aria-live="polite"></p>
       <p class="error" id="portal-error" role="alert"></p>
@@ -61,32 +56,6 @@
           <tbody id="record-rows"></tbody>
         </table>
       </div>
-    </div>
-  </section>
-
-  <section class="section" id="events">
-    <div class="container">
-      <div class="section-head">
-        <div>
-          <h2>Events</h2>
-          <p class="muted">Published by teachers. Times are Bangladesh time.</p>
-        </div>
-        <button class="btn btn-primary" id="post-event" hidden>Post event</button>
-      </div>
-      <p class="error" id="events-error" role="alert"></p>
-      <div class="event-grid" id="event-board"></div>
-    </div>
-  </section>
-
-  <section class="section section-soft" id="departments">
-    <div class="container">
-      <div class="section-head">
-        <div>
-          <h2>Faculties and departments</h2>
-          <p class="muted">Demo directory: the people are fictional, and the departments are based on KUET.</p>
-        </div>
-      </div>
-      <div class="faculty-grid" id="faculty-grid"></div>
     </div>
   </section>
 </main>
@@ -111,14 +80,10 @@
     <h2 id="record-title">Add record</h2>
     <label>Full name<input name="name" required maxlength="100"></label>
     <label>Email<input name="email" type="email" required maxlength="200"></label>
-    <label>Department<select name="department" id="record-department" required></select></label>
+    <label>Department<input name="department" required maxlength="100"></label>
     <div id="teacher-fields" hidden>
       <label>Designation<input name="designation" maxlength="100" placeholder="For example, Professor"></label>
       <label>Specialization<input name="specialization" maxlength="160"></label>
-      <div id="leadership-fields" hidden>
-        <label class="check"><input name="departmentHead" type="checkbox"> Department head</label>
-        <label class="check"><input name="facultyDean" type="checkbox"> Faculty dean</label>
-      </div>
     </div>
     <label>Password
       <input name="password" type="password" minlength="8" maxlength="72" autocomplete="new-password">
@@ -133,7 +98,6 @@
 </dialog>
 
 <script src="/js/site.js"></script>
-<script src="/js/events.js"></script>
 <script src="/js/home.js"></script>
 </body>
 </html>
