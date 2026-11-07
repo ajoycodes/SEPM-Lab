@@ -127,7 +127,12 @@ One `accounts` table stores everyone, with a `role` column. Three controllers gi
 ./mvnw test
 ```
 
-31 tests run the whole app against an in-memory database, through the real Spring Security filters. They cover login and logout, CSRF, BCrypt storage, the full role matrix, CRUD, validation, duplicates and profiles.
+- **6 unit tests** in `src/test/java/com/example/ums/unit/AccountServiceUnitTest.java` test `AccountService` alone, with the repository and password encoder replaced by Mockito mocks. They cover create (role and BCrypt hash), a missing password, a duplicate email, update without a password, an id from another role, and delete.
+- **3 integration tests** in `src/test/java/com/example/ums/integration/UniversityApiIntegrationTest.java` start the whole app on an in-memory H2 database and go through the real login, CSRF and role checks. They cover an admin's full CRUD on a student, which resources each role can reach, and password hashing with login and logout.
+
+Run one group with `./mvnw test -Dtest='*UnitTest'` or `./mvnw test -Dtest='*IntegrationTest'`.
+
+GitHub Actions runs both groups on every push and pull request. The workflow is `.github/workflows/university-management-tests.yml` at the root of the repository, and the results are on the repository's Actions tab.
 
 ## Known limits
 
