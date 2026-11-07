@@ -1,6 +1,7 @@
 # Demo logins
 
 Everyone here is fictional.
+//docker compose exec db psql -U university -d university -c "select id, name, email, role, department from accounts order by id limit 5;"
 
 Password for every account: `Admin123!`
 

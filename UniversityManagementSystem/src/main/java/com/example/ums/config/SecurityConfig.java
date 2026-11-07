@@ -1,5 +1,7 @@
 package com.example.ums.config;
 
+
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
@@ -14,7 +16,7 @@ import org.springframework.security.web.SecurityFilterChain;
 
 import java.io.IOException;
 import java.util.Map;
-
+//$2a$10$ + 22-character salt + 31-character hash
 @Configuration
 public class SecurityConfig {
 

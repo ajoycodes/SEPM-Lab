@@ -3,6 +3,8 @@ const Site = (() => {
   let csrf = null;
   let currentUser = null;
 
+
+  // SecurityConfig, AccountUserDetailsService
   // options: method, json (sent as JSON), form (sent as form fields).
   async function request(path, options = {}) {
     const method = options.method || 'GET';
