@@ -48,7 +48,7 @@ public class SecurityConfig {
                         // Admins manage all three resources, teachers only teachers, students only students
                         .requestMatchers("/api/admins", "/api/admins/**").hasRole("ADMIN")
                         .requestMatchers("/api/teachers", "/api/teachers/**").hasAnyRole("ADMIN", "TEACHER")
-                        .requestMatchers("/api/students", "/api/students/**").hasAnyRole("ADMIN", "STUDENT", "TEACHER")
+                        .requestMatchers("/api/students", "/api/students/**").hasAnyRole("ADMIN", "STUDENT")
                         .anyRequest().authenticated())
 
                 // Login: POST /api/auth/login with form fields username (the email) and password.
