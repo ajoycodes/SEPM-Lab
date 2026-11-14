@@ -79,7 +79,7 @@ public class AccountService {
             if (request.password().getBytes(StandardCharsets.UTF_8).length > 72) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password must be at most 72 bytes");
             }
-            account.setPasswordHash(passwordEncoder.encode(request.password()));
+            account.setPasswordHash(request.password());
         }
 
         account.setName(request.name().strip());
